@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Platform, ActionSheetIOS } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useSelector, useDispatch } from 'react-redux';
 import { deleteTask } from '../redux/actions';
@@ -25,6 +25,24 @@ const TaskList = () => {
         }
       }
     ]);
+  };
+
+  const handleSortPressIOS = () => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Cancel', 'Created Date', 'Due Date', 'Priority'],
+        cancelButtonIndex: 0,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 1) {
+          setSortBy('Created Date');
+        } else if (buttonIndex === 2) {
+          setSortBy('Due Date');
+        } else if (buttonIndex === 3) {
+          setSortBy('Priority');
+        }
+      }
+    );
   };
 
   const getSortedTasks = () => {
@@ -74,17 +92,24 @@ const TaskList = () => {
     <Layout>
       <View style={styles.header}>
         <Text style={styles.title}>Your Tasks</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={sortBy}
-            onValueChange={(itemValue) => setSortBy(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Created Date" value="Created Date" />
-            <Picker.Item label="Due Date" value="Due Date" />
-            <Picker.Item label="Priority" value="Priority" />
-          </Picker>
-        </View>
+        {Platform.OS === 'ios' ? (
+          <TouchableOpacity style={styles.iosPickerButton} onPress={handleSortPressIOS}>
+            <Text style={styles.iosPickerText}>{sortBy}</Text>
+            <Icon name="chevron-down" size={12} color="#555" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={sortBy}
+              onValueChange={(itemValue) => setSortBy(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Created Date" value="Created Date" />
+              <Picker.Item label="Due Date" value="Due Date" />
+              <Picker.Item label="Priority" value="Priority" />
+            </Picker>
+          </View>
+        )}
       </View>
 
       {tasks.length === 0 ? (
@@ -117,6 +142,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  iosPickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fafafa',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  iosPickerText: {
+    fontSize: 14,
+    color: '#333',
+    marginRight: 6,
+    fontWeight: '500',
+  },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -125,7 +166,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 40,
     justifyContent: 'center',
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
   picker: {
     height: 40,
